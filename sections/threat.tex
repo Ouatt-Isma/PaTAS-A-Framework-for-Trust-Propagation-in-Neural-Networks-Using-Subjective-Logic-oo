@@ -1,0 +1,15 @@
+\vspace{-0.5em}
+\subsection{Threat Model and Security Scope}\label{sec:threat}
+\vspace{-0.5em}
+
+\paragraph*{Assets and goal}
+The asset PaTAS protects is the \emph{reliability of individual model predictions at inference time}: the defender wishes to know, per query, whether an output can be trusted given the input quality, the training-data reliability, and the parameters through which the input propagates. PaTAS is a \emph{detection and monitoring} mechanism, not a hardening one; it does not alter the model or prevent an attack, but exposes predictions with weak supporting evidence.
+
+\paragraph*{Adversary}
+We consider a \emph{training-time data-poisoning adversary}~\cite{chen2017targetedbackdoorattacksdeep} who can inject or relabel a bounded fraction of training samples, including backdoor triggers such as fixed pixel patches, to induce targeted misclassifications hidden behind high nominal accuracy and confidence. The adversary controls neither the architecture, nor the training procedure, nor the trust assessments of known-provenance data. This is the threat evaluated in \cref{exp:3}.
+
+\paragraph*{Defender knowledge}
+PaTAS assumes white-box access to the model (parameters, activations, gradients), as it runs alongside training and inference, and access to trust opinions on inputs and labels; when unavailable, these are initialized to the vacuous opinion \((0,0,1)\), yielding conservative, uncertainty-dominated assessments rather than false assurance (\cref{sec:acquisition}).
+
+\paragraph*{Out of scope}
+Evasion attacks crafted at inference time, model-stealing, and membership-inference attacks are outside the present scope; PaTAS's signals may apply to them, e.g., by monitoring the trust profile of query streams, but we make no such claim here. We likewise prove consistency properties of the trust computation (\cref{sec:ptastheory}) rather than formal robustness guarantees against a bounded adversary, which remain an open direction.

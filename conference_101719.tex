@@ -1,0 +1,68 @@
+\documentclass[conference]{IEEEtran}
+
+\input{macros}
+\begin{document}
+
+\title{PaTAS: A Framework for Trust Propagation in Neural Networks Using Subjective Logic}
+
+% \author{Koffi Ismael Ouattara,
+%         Ioannis Krontiris, 
+%         Theo Dimitrakos,
+%         Dennis Eisermann,
+%         Houda Labiod,
+%         and Frank Kargl }
+
+\maketitle
+
+\begin{abstract}
+Trustworthiness has become a key requirement for deploying artificial intelligence in safety-critical applications, yet conventional metrics such as accuracy and precision fail to capture uncertainty or the reliability of predictions, particularly under adversarial or degraded conditions. This paper introduces the \emph{Parallel Trust Assessment System (PaTAS)}, a framework for modeling and propagating trust in neural networks using Subjective Logic (SL). PaTAS operates in parallel with standard neural computation through \emph{Trust Nodes} and \emph{Trust Functions} that propagate input, parameter, and activation trust across the network. It defines a \emph{Parameter Trust Update} mechanism that refines parameter reliability during training and an \emph{Inference-Path Trust Assessment (IPTA)} that, given a trained model and an input, returns a trust opinion, quantifying belief, disbelief, and uncertainty, on the prediction. Experiments on real-world and adversarial datasets show that these estimates are interpretable, symmetric, and convergent, and that they complement accuracy: PaTAS assigns markedly lower trust to outputs from adversarially patched inputs and flags predictions that remain accurate yet rely on parameters learned from corrupted data, reliability gaps that confidence scores do not reveal. Against maximum-softmax, MC~Dropout, and Evidential Deep Learning baselines, PaTAS detects out-of-distribution inputs (AUROC 0.975 vs.\ at most 0.936) and corrupted inputs that confidence-based methods rank near chance (0.97 vs.\ 0.63), flags training-label corruption without any test data, and self-diagnoses per dataset whether input-level trust is informative. PaTAS thereby provides a foundation for transparent, quantifiable trust reasoning across the AI lifecycle.
+\end{abstract}
+
+% \begin{IEEEkeywords}
+% Trustworthy AI, Subjective Logic, Neural Networks, Uncertainty Quantification, Trust Propagation, Data Corruption
+% \end{IEEEkeywords}
+
+% =====================================================================
+% Author working notes (kept out of the PDF).
+%
+% DONE (2026-08-17): Experiment 4 (comparative evaluation) written in
+%   sections/evaluation.tex with final cluster numbers — OOD + corruption
+%   detection (tab:comparative), input-trust ablation row, applicability
+%   diagnostics (tab:diagnostics), training-quality audit (tab:audit).
+%   Abstract + conclusion updated accordingly.
+% Remaining before submission:
+%   - Compile on Overleaf and check the 10-page budget; if over, first
+%     candidates to trim: Exp-1 intermediate-scenario enumerate,
+%     Implementation Details paragraph, Exp-3 prose (tables carry it).
+%   - Optional: epsilon/fusion ablation numbers exist in the results
+%     archive (Ablation_* dirs) if a reviewer asks.
+%   - Justify the gradient-trust assumption.
+%   - Input/label trust availability: consider submitting the dataset
+%     trust paper first so it can be cited rather than assumed.
+% =====================================================================
+
+\input{sections/introduction}
+% \input{sections/uncertainty}
+\input{sections/background}
+\input{sections/rw}
+
+
+\input{sections/pbstate}
+
+\input{sections/solution}
+\input{sections/ptasnn}
+
+\input{sections/evaluation}
+\input{sections/discussion}
+
+\input{sections/conclusion} 
+% \section*{Acknowledgments}
+% This should be a simple paragraph before the References to thank those individuals and institutions who have supported your work on this article.
+\vspace{-1em}
+\bibliographystyle{IEEEtran}
+\bibliography{bibtex/bib/references, bibtex/bib/calib, bibtex/bib/ecmlbias}
+
+\input{sections/appendices}
+
+\end{document}
+

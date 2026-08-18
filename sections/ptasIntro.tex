@@ -1,0 +1,11 @@
+When parameters such as \( \theta_1 \) and \( \theta_2 \) are learned by backpropagation, their trustworthiness depends on the training data: mislabeled or biased samples compromise parameter trust. The SL opinion representation of \cref{sec:backsl} further distinguishes the causes of unreliability, with distrust arising from systematic issues such as mislabeled or poisoned data and uncertainty reflecting variability or noise in the assessment. A central challenge is how to exploit this distinction in practice.
+
+\vspace{-0.5em}
+\subsection{PaTAS General Description}
+
+To address these challenges, we introduce the \emph{Parallel Trust Assessment System (PaTAS)}, which propagates trust assessments through a neural network by operating in parallel with the standard architecture and maintaining a structure mirroring its topology. It computes trust in the output from two sources: the trust in the input features at inference time, and the trust in the parameters, derived from the trustworthiness of the training dataset (covering both the features and the labels of the training samples). To extend the perceptron principles of the previous section, PaTAS associates a Trust Node with each neuron and connects the nodes according to the network's topology, forming a Trust Nodes Network (TNN).
+\begin{definition}[Trust Nodes Network]
+The \emph{Trust Nodes Network} is a structured composition of Trust Nodes, one per neuron of the underlying network, mirroring its architecture; it propagates trust across layers by applying trust-specific reasoning operations aligned with the neural computation flow.
+\end{definition}
+
+PaTAS continuously evaluates trustworthiness during inference: an input \(x\) may be trustworthy (high \(T_x\)) while the output \(y\prime\) is unreliable because of biased or poorly calibrated parameters \(\theta\) (low \(T_{y\prime}\)). Embedding trust operations inside the network would alter its computations, risk harming accuracy, and raise cost; PaTAS therefore performs trust assessment in parallel (Appendix~\ref{app:flow}), so that trust reasoning never interferes with the model's predictions.

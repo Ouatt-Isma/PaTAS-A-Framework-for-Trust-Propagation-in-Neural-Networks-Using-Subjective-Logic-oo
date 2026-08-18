@@ -1,0 +1,19 @@
+\vspace{-0.5em}
+\section{Discussion}\label{sec:discussion}
+\vspace{-0.2em}
+\subsection{Discussion of PaTAS Findings}
+
+Beyond per-output assessment, PaTAS can estimate a static trust opinion of the network as \(T(\text{NN}) = PaTAS_{FF}((1,0,0))\), on the principle that a trustworthy model preserves trust; under this definition the IPTA results of Experiment~\ref{exp:3} show clear degradation for adversarial samples (\cref{tab:mnistpoisipta}).
+
+Although trust mass and accuracy are often correlated, our results reveal meaningful divergences. In the breast cancer task (\cref{tab:cancer_results}), the mixed profile \((0.25,0,0.75)\) yields a higher final trust mass (\(0.35\)) than the uncertain-features/trusted-label case (\(0.32\)), yet the latter achieves better test accuracy (96\% vs.\ 94\%); starkest, in poisoned MNIST (\cref{tab:mnistpoisipta}) clean digits \(3\) and \(6\) reach comparable accuracy (97.8\% and 97.4\%) but IPTA trust \(0.886\) vs.\ \(0.570\). Higher trust mass therefore does not imply superior predictive performance, and equal accuracy does not imply equal trustworthiness.
+
+These divergences reflect that PaTAS evaluates the reliability of the inference path, not predictive accuracy alone: digit \(6\) was a poisoned class during training, so the parameters predicting it are less trusted than those for \(3\), even on clean test samples. 
+
+Interpretation of trust values, like accuracy, is application-dependent: \((0.4,0,0.6)\) may be inadequate in high-stakes settings yet sufficient elsewhere. PaTAS supports such reading with a single interpretable metric that complements accuracy.
+
+\paragraph*{Obtaining input and label trust}\label{sec:acquisition}
+Three routes provide the input- and label-level trust opinions consumed by PaTAS, in decreasing order of information. (i) \emph{Provenance-based assessment}: when data are drawn from sources of known reliability, the quantification models of \cref{sec:back} map the supporting and contradicting evidence directly into a binomial opinion; this is how our companion work assesses dataset trustworthiness~\cite{10.1007/978-3-032-19096-3_17} and how feature-level opinions are assigned when part of an input, such as a region covered by an adversarial patch, is known to be unreliable. (ii) \emph{Estimation from data}: label agreement across annotators or models, and input-quality signals such as out-of-distribution or anomaly scores, can be converted to opinions through the same evidence mapping; the conformity-based construction of \cref{exp:4} instantiates this route. (iii) \emph{Vacuous fallback}: when no such information exists, the opinion is initialized to \((0,0,1)\); since a vacuous input yields a vacuous output (\cref{thm:infvac}), this fallback conservatively produces uncertainty-dominated assessments rather than unwarranted trust, and PaTAS still contributes through parameter and path trust. Crucially, the per-query collection circumstances of a single input are usually easier to establish than the provenance of an entire training set.
+
+A key factor is the threshold \(\epsilon\) separating positive from negative gradient evidence: as \cref{tab:cancer_results} shows, too small an \(\epsilon\) makes PaTAS read gradients as large even when the model performs well, so that trusted labels reduce parameter trust, resembling the \(g \to +\infty\) case in Appendix~\ref{app:asymptotic}. \(\epsilon\) can be tuned per layer or tied to the learning rate, decaying alongside it to track the expected gradient scale.
+
+\input{sections/threat}

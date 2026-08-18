@@ -1,0 +1,56 @@
+\vspace{-0.5em}
+\section{Background}\label{sec:back}
+Trust assessment in NNs requires a formalization that can represent ambiguity, inadequate evidence, and source reliability. This section summarizes Subjective Logic (SL) and its opinion representation (\cref{sec:backsl}), the main SL reasoning operators (\cref{sec:backslop}), and their application to dataset trustworthiness (\cref{sec:backtwdt}).
+\vspace{-0.5em}
+\subsection{Subjective Logic Fundamentals}\label{sec:backsl}
+Classical probability theory models aleatoric uncertainty but cannot represent missing knowledge (ignorance) or contradictory information, which often arises from noisy or biased data. Subjective Logic~\cite{josang2016subjective} extends Dempster–Shafer theory~\cite{dempster1967upper,shafer1976mathematical} by representing trust as opinions whose belief and uncertainty are separate components, thereby distinguishing epistemic from aleatoric uncertainty.
+
+A subjective opinion denoted by \(\omega_X^A\) expresses the beliefs of an agent \(A\) (e.g., a sensor, a human, or an external observer of a process) about states of a variable $X$ which takes its values from a domain $\mathbb{X}$ (i.e., a state space). A special case of a subjective opinion is a subjective binomial opinion where $card(\mathbb{X})=2$. For a binary variable $X \in \mathbb{X} = \{x, \overline{x}\}$, a binomial opinion is expressed as a quadruple:
+\vspace{-0.5em}
+\begin{equation}
+\omega_x = \omega_{X=x} = (b_x, d_x, u_x, a_x)
+\end{equation}
+satisfying $b_x + d_x + u_x = 1$, where $b_x$ denotes belief in $x$, $d_x$ disbelief in $x$ (belief in \(\overline{x}\)), $u_x$ the uncertainty mass, and $a_x$ the base rate (prior probability of $x$ in the absence of evidence). Its projected probability is defined as:
+\vspace{-0.5em}
+\begin{equation}
+P(x) = b_x + a_x u_x.
+\label{eq:projected_prob}
+\end{equation}
+This projection reduces an opinion to an equivalent classical probability, enabling compatibility with standard probabilistic reasoning.
+
+Binomial opinions can be derived from evidence: with $r_x$ and $s_x$ the amounts of positive and negative evidence for $x$, this work uses \emph{Baseline-Prior Quantification},
+\begin{align}
+b_x &= \frac{r_x}{W + r_x + s_x}, \quad
+d_x = \frac{s_x}{W + r_x + s_x}, \quad
+u_x = \frac{W}{W + r_x + s_x}
+\label{eq:q1}
+\end{align}
+where the weight \(W>0\) guarantees residual uncertainty. Evidence-weighted and constant-uncertainty quantification~\cite{10.1007/978-3-032-19096-3_17} are alternatives that scale or fix the uncertainty mass instead.
+
+A subjective opinion is meaningful only relative to a property under evaluation (e.g., accuracy or bias). In this work, trust is represented as a subjective binomial opinion $(t, d, u)$, where $t$ denotes trust (belief), $d$ distrust (disbelief), and $u$ uncertainty; the operators that make these opinions operational are introduced next.
+
+\vspace{-0.5em}
+\subsection{Subjective Logic Operators}\label{sec:backslop}
+
+SL provides three families of reasoning operators for manipulating opinions~\cite{8009820,10706345,josang2016subjective}, all used in this work.
+
+\begin{definition}[SL Operators]\label{def:fusion}
+Let \(A\) be an agent reasoning about a variable \(X\).
+
+\emph{Fusion} combines opinions held by two sources \(P\) and \(Q\) about the same proposition, \(\omega^A_{x} = \omega^P_{x} \oplus \omega^Q_{x}\); the appropriate variant (consensus, averaging, weighted, or cumulative) depends on whether the sources are correlated or independent.
+
+\emph{Trust discounting} propagates an opinion along a referral chain: if \(A\) holds referral trust \(\omega^A_B\) in \(B\), who holds \(\omega^B_x\), then \(\omega^{[A;B]}_{x} = \omega^A_B \otimes \omega^B_{x}\), so that evidence from a partially reliable source is weakened and its uncertainty increased.
+
+\emph{Inferential operators} generalize Bayesian reasoning through a conditional opinion \(\omega^A_{Y \mid X}\): \emph{deduction} derives \(\omega^A_Y\) from \(\omega^A_X\), and \emph{abduction} derives \(\omega^A_X\) from \(\omega^A_Y\).
+\end{definition}
+\noindent Details, summaries, and symbols for all operators appear in Appendices~\ref{app:operators} and \ref{app:operator}.
+
+Building on these operators, \emph{Subjective Trust Networks}~\cite{4622580,10.1007/978-3-032-08887-1_4} model trust relationships as subjective opinions propagated through trust discounting and fusion. 
+
+\vspace{-0.5em}
+\subsection{Trustworthiness in the dataset}\label{sec:backtwdt}
+% \todo[inline]{Paper Trustworthiness in Dataset}
+
+The quality and structure of the training dataset largely determine the performance, robustness, and fairness of machine learning models: sampling biases, mislabeled instances, or lack of diversity degrade learned representations and hinder generalization~\cite{arp2021dosdontsmachinelearning}. A recent study on dataset quality shows that even small proportions of mislabeled samples can substantially shift model rankings; for instance, on CIFAR-10, VGG11 trained on clean data can outperform VGG19 once the fraction of erroneous labels reaches about 5\%, illustrating how sensitive benchmark conclusions are to label errors~\cite{northcutt2021pervasivelabelerrorstest}. Thus, evaluating the trustworthiness of training data is a critical step in assessing the trustworthiness of an AI system. 
+
+Subjective Logic has been applied effectively to model dataset trustworthiness~\cite{10.1007/978-3-032-19096-3_17,trust-aidatatrust}, treating the dataset as a collection of samples, each composed of an input vector and a corresponding label. Trustworthiness can then be assessed at three granularities: the \emph{dataset level}, capturing global effects such as class imbalance or sampling bias; the \emph{instance level}, capturing mislabeled or corrupted data points; and the \emph{input feature level}, capturing fine-grained variation within an input vector, as when an adversarial patch renders only part of an image untrustworthy~\cite{Vargas2020} or when features originate from sources of differing reliability.

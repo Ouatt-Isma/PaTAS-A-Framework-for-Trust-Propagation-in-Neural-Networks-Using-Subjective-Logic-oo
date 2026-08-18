@@ -1,0 +1,33 @@
+\vspace{-0.5em}
+\section{Proposed Method}\label{sec:method}
+In our framework, trust reasoning begins at the feature level: each input component carries a trust opinion, so that individual regions or pixels of an image can carry different trust derived from indicators such as noise, blur, or pipeline confidence\footnote{How such feature-level opinions are obtained is an orthogonal problem, out of scope here.}. These opinions are injected into PaTAS and propagated to the output, carrying input-trust variation explicitly through to the prediction.
+
+\vspace{-0.5em}
+\subsection{Foundations of Trust-Aware Neural Inference for PaTAS}
+% \todo[inline]{General Representation of NN}
+Given a NN represented by \(\Theta = \left(\mathbf{W}, \mathbf{b}, \phi\right)\), where \(\mathbf{W} = \{\mathbf{W}^{(l)}\}\) collects the weight matrices \(\mathbf{W}^{(l)} \in \mathbb{R}^{n_l \times n_{l-1}}\) of each layer \(l\) (with \(n_l\) the number of neurons in layer \(l\)), \(\mathbf{b} = \{\mathbf{b}^{(l)}\}\) the bias vectors \(\mathbf{b}^{(l)} \in \mathbb{R}^{n_l}\), and \(\phi = \{\phi^l(\cdot)\}\) the activation functions, which may vary across the neurons of a layer,
+with standard feedforward output \(\mathbf{y\prime} = f_\Theta(x)\). Given a training dataset \( \mathcal{D} = \{ (\mathbf{x}_i, \mathbf{y}_i) \}_{i=1}^{N} \) and a trust assessment function \( T(\cdot) \) over features and labels, our objective is to compute a trust opinion on the output \( \mathbf{y\prime} = f_\Theta(\mathbf{x}) \). We formalize this through a \emph{Parallel Function}.
+
+\begin{definition}[Parallel Function]
+The \emph{Parallel Function} of a Neural Network with parameters \(\Theta\), denoted \( \pf_\Theta \), is a function that mirrors the structure of the network’s feedforward computation \( f_\Theta \) to propagate trust assessments from input to output. Given a trust evaluation \( T(\mathbf{x}) \) over an input \(\mathbf{x}\), \( \pf_\Theta(T(\mathbf{x})) \) returns a trust opinion on the network’s output \(\mathbf{y\prime} = f_\Theta(\mathbf{x})\). This opinion reflects the trust assigned to the prediction based on trust in the input, and also taking into account the architecture and how the parameters of \( f_\Theta \) were learned.
+\end{definition}
+
+The parameters follow from the usual empirical-risk minimization \(\mathbf{W},\mathbf{b} = \arg\min \sum_i \mathcal{L}(\mathbf{y\prime}_i,\mathbf{y}_i)\), which optimizes accuracy but says nothing about how input trust influences output trust. We therefore use \emph{Subjective Logic} as the propagation calculus and build \(\pf_\Theta\) for general networks, with the perceptron as a tractable illustration.
+ 
+\vspace{-0.5em}
+\subsection{Perceptron Case: SL Formulation}\label{sec:perceptron}
+
+Consider an observer \(A\) forming a trust opinion \(\omega_{y\prime}^A\) on the output \(y\prime\) of a perceptron. Not observing the internal computation directly, \(A\) relies on the opinion \(\omega_{y\prime}^{N_O}\) held by the output neuron \(N_O\) and on a referral trust \(\omega_{N_O}^A\) in \(N_O\) itself. Trust in the output is thus determined by trust in the input and trust in the perceptron, the latter following from its design and the trustworthiness of the training data.
+
+Let \( f_\Theta \) be the perceptron inference function and \( x \) an input with trust opinion \( T_x \)\footnote{We write \(T_x\) rather than \(\omega_x\) since, as a framework input, only the opinion on the variable is required and no specific agent need be represented.}. Applied to a two-feature perceptron \(y\prime = \theta_1 s + \theta_2 n_r\), this yields the following, derived in full in Appendix~\ref{app:perceptron}.
+
+\begin{lemma}[Perceptron Trust Propagation]\label{lem:perceptron}
+Let \(T_s\) and \(T_{n_r}\) be trust opinions on the input features of the perceptron \(y\prime = \theta_1 s + \theta_2 n_r\), and let \(T_{\theta_1}, T_{\theta_2}\) be trust opinions on its parameters. Then
+\begin{equation}
+\label{eq:sol}
+    \pf_\Theta\!\left(\begin{pmatrix} T_s & T_{n_r}\end{pmatrix}\right) =  (T_{\theta_1}\otimes T_s)\oplus (T_{\theta_2}\otimes T_{n_r}),
+\end{equation}
+where \(\otimes\) is a trust discounting operator and \(\oplus\) a fusion operator whose variant is determined by the semantics of the features (\cref{def:fusion}). For fully trusted parameters \(T_\theta = (1,0,0)\) this reduces to \(T_s \oplus T_{n_r}\).
+\end{lemma}
+
+\Cref{eq:sol} shows that parameter trust discounts the contribution of each feature before the contributions are fused, so that the output assessment reflects trust in both the data and the learned model. How the parameter-trust opinions \(T_{\theta_i}\) are themselves computed is the subject of \cref{sec:patas}.

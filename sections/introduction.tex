@@ -1,0 +1,21 @@
+\vspace{-0.5em}
+\section{Introduction}
+
+Artificial Intelligence (AI) systems, particularly Neural Networks (NNs), are employed in critical sectors such as healthcare, to interpret clinical images, or autonomous driving, to recognize elements in traffic scenes. While highly performant, they often operate as black boxes offering limited insight into the reliability of their outputs, an opacity that becomes critical under adversarial, uncertain, or degraded conditions. Conventional metrics such as accuracy or precision do not capture uncertainty or reliability and can mislead decision-makers~\cite{10.1145/3290605.3300509}: a model may report 95\% accuracy while being evaluated on mislabeled data, unaccounted for dataset bias, label noise, or adversarial corruption. Reliability measures must therefore go beyond predictive confidence and consider the quality and provenance of inputs, the reliability of training data, and the fit of learned parameters.
+
+As AI systems become integral to critical applications, \emph{trustworthiness} has emerged as a fundamental requirement. A trustworthy system must be lawful, ethical, and robust~\cite{ec2019ethics}, some of which translate into measurable properties such as accuracy, robustness, fairness, and explainability~\cite{10.3389/fdata.2024.1467222}. Embedding these across the AI pipeline, from data collection to deployment, is essential for preventing failures caused by poor data quality, bias, or unstable training. 
+
+Despite this growing awareness, most models still provide limited mechanisms for representing confidence in their outputs. Trained under the assumption of clean, unambiguous labels, neural networks produce predicted probabilities that reflect similarity to seen patterns rather than genuine uncertainty, and that presuppose clean, in-distribution inference inputs; these assumptions are rarely satisfied in real-world or adversarial settings, where data quality, distributional shift, and how well parameters are learned all influence prediction reliability. Existing approaches, including attribution-based methods such as SmoothGrad~\cite{smilkov2017smoothgradremovingnoiseadding}, thus lack mechanisms to evaluate how trustworthiness in training inputs, activations, and parameters jointly affects output reliability. This gap motivates tools that reason explicitly about trustworthiness across the entire model lifecycle.
+
+\paragraph*{Problem Statement}
+Existing methods for trustworthiness and uncertainty estimation in neural networks face three key limitations. They \emph{neglect data provenance and quality}, assuming the training data are fully reliable; they offer only \emph{limited holistic propagation}, assessing reliability at the output layer alone; and they \emph{lack interpretability}, rarely yielding estimates that are both faithful to the model's reasoning and understandable to end users. Together these hinder reliable trustworthiness assessment in safety-critical or adversarial contexts.
+
+\paragraph*{Contributions}
+To address these challenges, we propose the \emph{Parallel Trust Assessment System (PaTAS)}, a framework for modeling and propagating trustworthiness in NNs using Subjective Logic (SL). Our contributions are:
+\begin{enumerate}
+    \item \emph{Parallel Trust Computation:} \textit{Trust Nodes} and \textit{Trust Functions} mirroring neural computations, propagating trust during training and inference through SL discounting and fusion.
+    \item \emph{Parameter Trust Update:} an algorithm deriving trust in learned parameters from gradient values, input trust, and label trust, aligned with the learning dynamics.
+    \item \emph{Inference-Path Trust Assessment (IPTA):} a context-aware trust function using activation-path information for per-instance trust scores.
+    \item \emph{Empirical Validation:} evaluation on real-world and adversarial datasets showing interpretable trust estimates that expose reliability gaps under poisoned, biased, and uncertain data.
+\end{enumerate}
+

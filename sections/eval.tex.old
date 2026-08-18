@@ -1,0 +1,219 @@
+\section{Evaluation and Results}
+
+\subsection{Experimental Setup }
+\subsubsection{Experiment 1 - Breast Cancer Classification}\label{exp:1}
+
+\begin{figure}[h]
+    \centering  \includegraphics[width=0.95\linewidth]{slides/scenario.png}
+    \caption{Flow of classification and trust evaluation in PaTAS: From raw data to inference and trust assessment.}
+    \label{fig:ptas-breast-cancer-flow}
+\end{figure}
+
+\cref{fig:ptas-breast-cancer-flow} shows the flow from dataset preparation to trust assessment. Ultrasound images are preprocessed for feature extraction, which are then used for binary tumor classification. The PaTAS system evaluates trust during inference based on both the inference path and the input features' trust, with the IPTA module computing the final trust score.
+
+We use the \href{https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic}{Breast Cancer Wisconsin (Diagnostic) Dataset}, containing 569 samples with 30 numeric features (e.g., radius, area, symmetry) derived from breast mass fine needle aspirates. The neural network classifies the tumors into benign or malignant categories.
+
+The neural network architecture consists of 30 input neurons, 16 hidden neurons, and 2 output neurons, with ReLU activation in the hidden layer and Softmax in the output. The model is trained for 5 epochs with a batch size of 64 and a learning rate of 0.2, achieving 98\% accuracy.
+
+Data trust is assessed with three trust profiles for inputs: fully trusted \((1,0,0)\), fully distrusted \((0,1,0)\), and fully uncertain \((0,0,1)\). These are combined with the label trust to form nine combinations.
+
+Input trust degradation is simulated by considering poor-quality imaging, human annotation errors, and flaws in the preprocessing pipeline, affecting the input features' reliability.
+
+
+\subsubsection{Experiment 2 - MNIST}\label{exp:2}
+
+In this experiment, we evaluate the PaTAS framework on the MNIST dataset. The system begins with the acquisition and preprocessing of the 28x28 grayscale images. These are used as inputs into the neural network for digit classification, with the PaTAS framework evaluating the trustworthiness of the classification. The evaluation stops after 40 rounds of training to ensure consistent comparison across different configurations.
+
+We use the \href{http://yann.lecun.com/exdb/mnist/}{MNIST dataset}, which consists of 60,000 training images and 10,000 test images, each representing a digit from 0 to 9. Each image has 784 features (28x28 pixels). The neural network classifies these images into one of the 10 digit classes.
+
+We test three neural network architectures:
+\begin{itemize}
+    \item Architecture 1: 784 input neurons, 5 hidden neurons, 10 output neurons (784-5-10).
+    \item Architecture 2: 784 input neurons, 10 hidden neurons, 10 output neurons (784-10-10).
+    \item Architecture 3: 784 input neurons, 20 hidden neurons, 10 output neurons (784-20-10).
+\end{itemize}
+Each model uses the ReLU activation function for the hidden layer and Softmax for the output. Models are trained for 5 epochs with a batch size of 64 and a learning rate of 0.2, achieving test accuracies from 94\% to 98\%.
+
+We evaluate two data trust assessment functions:
+\begin{itemize}
+    \item Fully uncertain/vacuous opinion for all inputs.
+    \item Randomized trust assessment, where inputs receive one of three probabilistic opinions: trust, distrust, or vacuous.
+\end{itemize}
+
+These functions help compare the effect of constant uncertainty versus varied trust assignment on the PaTAS framework’s performance.
+
+Trust degradation is simulated by considering factors such as noisy images, human annotation errors, and preprocessing inaccuracies that can affect the MNIST dataset's reliability.
+
+
+
+
+\subsubsection{Experiment 3 - Poisoned MNIST}\label{exp:3}
+
+In this experiment, we evaluate the PaTAS framework on a poisoned version of the MNIST dataset to test the system’s response to adversarial perturbations. The poisoned dataset is created by altering a subset of the training data: two parties provide clean data, while a malicious party flips the labels of digits 6 and 9 and adds a patch of a given size at the top-left corner of a portion of the images. This simulates a data poisoning attack, where adversarial examples can degrade model performance and trust.
+
+We use Architecture 3 from the previous experiment, consisting of an input layer with 784 neurons, one hidden layer with 20 neurons, and an output layer with 10 neurons (784-20-10).
+
+For the poisoned dataset, trust is assigned as follows:
+\begin{itemize}
+    \item Pixels corresponding to the patch are considered distrusted, while all other pixels are trusted.
+    \item Labels for digits 6 and 9 are distrusted, while labels for other digits are trusted.
+\end{itemize}
+
+This setup helps the PaTAS framework focus on potentially corrupted areas, while trusting the unaffected parts of the data.
+
+Trust degradation occurs through data poisoning, with noisy images and mislabeled instances corrupting the dataset. These introduce uncertainty and adversarial patterns, potentially reducing the model’s trustworthiness and performance during inference.
+
+\subsection{Implementation Details}
+
+During inference, multiplication operations in the feedforward phase are handled using SL trust discounting, which adjusts the weight of each connection based on the trust assigned to the inputs. For additions, we use a generalized version of SL averaging fusion, which is necessary to handle the summation of multiple values. This is essential because the addition operations inside the neural network involve more than two inputs (not just binary operations). Thus, the operator must either be generalized or, at a minimum, be associative and commutative, to ensure proper trust propagation across all neurons.
+
+For the Trust Feedforward we use (SL discounting for multiplication and SL averaging fusion for addition).
+To handle trust revision, we use the same operator for \(\ominus, \bigwedge\,\text{and} \bigvee\). Regarding the function \(f_{upd}\), we don't consider the learning rate and we use binomial multiplication. In clear \( T_{\theta_{i,j}}  \longleftarrow T_{\theta_{i,j}} \odot T_{x_j^{(l)}}\)
+
+We implemented the PaTAS framework and neural network models in Python. Two main modules were created: PrimaryNN and PaTAS. PrimaryNN handles the neural network structure, training, and inference operations and PaTAS implements all the functions and operations needed for trust assessment and propagation, as specified in PaTAS Operation (referenced in \ref{fig:ptasoperation}).
+Both modules interact seamlessly to enable the PaTAS framework to evaluate and revise trust dynamically during each forward pass and backpropagation phase.
+
+The full implementation of the PaTAS framework and the neural network models is available on GitHub. You can access the code repository on github~\cite{code}. This includes all the necessary modules, dependencies, and instructions for running the experiments as described in this paper.
+
+
+\subsection{Results and Analysis}
+In this paper, the evaluation of the Parallel Trust Assessment System (PaTAS) is conducted during the training phase of the neural network. After each round of training (i.e., a complete feedforward and backpropagation cycle), we assess the trustworthiness of the input data using three distinct input types:
+
+\begin{itemize}
+    \item Fully Trusted Input: where the trust in the data is considered absolute (row 1 in each figure).
+    \item Fully Uncertain Input: where the trust in the data is undefined, represented as maximum uncertainty (row 2 in each figure).
+    \item Fully Distrusted Input: where the data is assumed to be unreliable, and the trust is considered to be fully negative (row 3 in each figure).
+\end{itemize}
+
+For each of these three input types, we track and plot the evolution of three key metrics over the course of training:
+
+\begin{itemize}
+    \item Trust Mass: representing the level of confidence in the given input.
+    \item Uncertainty Mass: representing the uncertainty associated with the input's trustworthiness.
+    \item Distrust Mass: representing the level of disbelief in the input.
+\end{itemize}
+
+As a result, for each evaluation, 9 distinct plots are generated, corresponding to the 3 input types (fully trusted, fully uncertain, and fully distrusted) and each of the three key metrics (trust, uncertainty, and distrust).
+
+% \todo[inline]{NO IPTA? think of IPTA when data poisoned}
+
+\subsubsection{Overall Results}
+All the results are depicted in Figures~\ref{fig:cancer0.01}~\ref{fig:cancer0.1}\ref{fig:mnist}\ref{fig:mnistpois}\ref{fig:mnistrand}. The overall results of the evaluation provide confirmation of several key theoretical properties of PaTAS, which were proven in Section~\ref{sec:ptastheory}. Specifically, the evaluation supports the following findings:
+
+\begin{itemize}
+    \item \textit{Convergence of Trust Assessment:} The evaluation confirms that the trust assessment converges as expected, which aligns with the theoretical results proved.
+    \item \textit{PaTAS Inference on Vacuous Input Yields Vacuous Output:} When the input is vacuous (i.e., fully uncertain), the PaTAS inference also results in a vacuous output. This can be seen in all figures.
+    \item \textit{Symmetric Inference under PaTAS:} The symmetry property of PaTAS, as discussed in Section~\ref{sec:ptassyminv}, is observed. This property ensures that the inference remains symmetric when the input trust assessments are symmetric.
+\end{itemize}
+
+These overall results serve as strong validation for the theoretical foundations of PaTAS and provide confidence in the robustness and reliability of the system.
+
+For the detailed analysis, we will focus only on the 3 plots corresponding to the evolution when assessing a trustworthy input. This is because the results from processing uncertain inputs naturally lead to uncertain outputs, as expected. Additionally, there exists symmetry between the results when processing fully trusted and fully distrusted inputs. Therefore, we can deduce that a similar behavior will be observed when analyzing the distrusted input, without needing to analyze it in detail. Thus, the primary focus can remain on the evolution of trust, uncertainty, and distrust when the input is fully trusted.
+Moreover, we notice that in most of the plots, when the input is fully trusted, the distrust mass in the output remains generally close to zero throughout the training rounds. This consistency suggests that the distrust component does not significantly contribute to the overall assessment when the input is highly reliable. Consequently, we decide to analyze only the trust mass (whenever the distrust mass doesn't present significant results), as the sum of uncertainty and trust remains approximately 1.
+
+
+
+
+
+
+
+
+\subsubsection{Experiment 1 - Breast Cancer Classification}
+We evaluated the system for two values of \(\epsilon\) (0.1 and 0.01).
+
+\paragraph{For \(\epsilon = 0.01\)}  
+When \(X\) is fully uncertain, the trust mass for \(Y\) shows slight increases and stabilizes at around 0.28 for distrusted \(Y\) and 0.30 for trusted \(Y\). Fully trusted \(X\) causes rapid increases in trust mass, which stabilizes at 0.8.
+
+\paragraph{For \(\epsilon = 0.1\)}  
+With a larger \(\epsilon\), the system becomes less sensitive to gradient values, and the trust mass for uncertain \(X\) stabilizes at 0.28. Fully trusted \(X\) leads to higher final trust mass (0.9).
+
+Summary in Table~\ref{tab:cancer_results}
+
+\paragraph{Key Observations} 
+The trust in \(X\) has a more impact on the final results. As the trust in \(X\) increases, the influence of \(Y\)'s trust on the final output becomes more pronounced. The final trust values are higher when \(X\) is fully trusted, and the model appears to perform better when \(X\) is reliable.
+
+These findings highlight the importance of the input trustworthiness in shaping the final results, confirming the sensitivity of the PaTAS to the data’s trust properties.
+
+Another key remark is that when \(\epsilon\) is too small, whether \(Y\) is trusted, uncertain or distrusted doesn't really impact the final trust mass after convergence.
+
+\subsubsection{Experiment 2 - MNIST Dataset}
+For all MNIST evaluations, \(\epsilon = 0.01\). The trust mass evolves for each label with similar trends, showing greater stability with larger architectures (e.g., 20 hidden neurons).
+
+Summary in Table~\ref{tab:mnist}
+
+\paragraph*{Key Observations}  
+The results from Experiment 2 indicate that larger architectures tend to be more trustworthy, likely due to smaller average gradient magnitudes (\(g\)) during assessment. Resource limitations prevented us from evaluating the framework on even larger neural network architectures, but the observed trend suggests further gains might be possible.
+
+\subsubsection{Experiment 3 - Poisoned MNIST Dataset}
+The trust mass starts low and increases quickly. The difference between poisoned labels (6 and 9) and others becomes more pronounced with larger patch sizes. For a network with 20 hidden neurons:
+
+\begin{itemize}
+    \item \((1 \times 1)\) patch: Trust for non-poisoned labels = 0.93
+    \item \((4 \times 4)\) patch: Trust for non-poisoned labels = 0.90
+    \item \((20 \times 20)\) patch: Trust for non-poisoned labels = 0.375
+    \item \((27 \times 27)\) patch: Trust for non-poisoned labels = 0.05
+\end{itemize}
+
+Summary in Table~\ref{tab:mnistpois}
+
+\paragraph*{Key Observations}  
+The results confirm that PaTAS can detect subtle differences in trust behavior induced by data poisoning, particularly at moderate patch sizes. The IPTA analysis reinforces the conclusion that adversarial perturbations, while possibly small, can have a quantifiable and interpretable impact on the trustworthiness of model predictions.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+Trust Assessment & For \(\epsilon = 0.01\) & For \(\epsilon = 0.1\) \\
+\hline
+\(X\) fully uncertain, \(Y\) distrusted & 0.28 & 0.28 \\
+\hline
+\(X\) fully uncertain, \(Y\) vacuous & 0.28 & 0.30 \\
+\hline
+\(X\) fully uncertain, \(Y\) fully trusted & 0.30 & 0.34 \\
+\hline
+\(X\) fully trusted, \(Y\) distrusted & 0.8 & 0.8 \\
+\hline
+\(X\) fully trusted, \(Y\) fully uncertain & 0.79 & 0.83 \\
+\hline
+\(X\) fully trusted, \(Y\) fully trusted & 0.79 & 0.9 \\
+\hline
+\end{tabular}
+\caption{Summary of final trust mass for the Breast Cancer Classification Experiment.}
+\label{tab:cancer_results}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|c|c|}
+\hline
+Number of Hidden Neurons & Trust mass \(t\) \\
+\hline
+5 & 0.28 \\
+\hline
+10 & 0.30 \\
+\hline
+20 & 0.32 \\
+\hline
+\end{tabular}
+\caption{Summary of final trust mass for the MNIST Classification Experiment.}
+\label{tab:mnist}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{|c|c|}
+\hline
+Patch size & Trust mass for non-poisoned labels \\
+\hline
+\((1 \times 1)\) & 0.93 \\
+\hline
+\((4 \times 4)\) & 0.90 \\
+\hline
+\((20 \times 20)\) & 0.375 \\
+\hline
+\((27 \times 27)\) & 0.05 \\
+\hline
+\end{tabular}
+\caption{Summary of result for the Poisoned MNIST Classification Experiment.}
+\label{tab:mnistpois}
+\end{table}

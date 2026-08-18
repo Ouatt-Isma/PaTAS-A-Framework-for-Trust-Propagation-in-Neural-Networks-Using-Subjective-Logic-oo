@@ -1,0 +1,97 @@
+\section{PTAS for Neural Networks}
+
+This section introduces the Parallel Trust Assessment System (PTAS), a framework designed to estimate and propagate trust through a neural network. PTAS mirrors the structure of the neural network and operates alongside it, assessing how trust in the input data and training process influences trust in the network’s outputs.
+
+\subsection{Conceptual Overview}
+
+PTAS does not modify the architecture or training process of the neural network. Instead, it acts as a parallel reasoning system, operating on trust scores rather than feature values. Every layer and operation in the original network is mirrored by a corresponding trust-based computation in PTAS.
+
+Each node in the PTAS corresponds to a neuron in the network and maintains a trust function that represents its opinion about the trustworthiness of the data it processes. These trust opinions are represented using Subjective Logic, and are updated during training using delta feedback from the original model.
+
+\subsection{Construction of PTAS}
+
+PTAS is instantiated during training by mirroring the architecture of the target neural network. Each PTAS node is associated with a trust function and initialized with a vacuous opinion, reflecting complete uncertainty. These nodes form layers analogous to those of the neural network.
+
+Trust values are propagated through PTAS in parallel with data, using mappings that translate network operations (e.g., multiplication, summation, activation) into corresponding trust operations:
+\begin{itemize}
+    \item Multiplication → Subjective Logic discounting
+    \item Addition → Subjective Logic fusion (e.g., averaging or cumulative)
+    \item Activation functions → mapped trust-preserving transformations
+\end{itemize}
+
+Let \( T_x \) denote the trust assessment on the input \( x \), computed using a domain-specific data trust function. During feedforward, trust flows from input to output using the above mappings. Each layer computes:
+\[
+T_z^{(l)} = \bigvee_{i=1}^d \left( T_{x_i}^{(l)} \otimes T_{\theta_i}^{(l)} \right), \quad T_{x}^{(l+1)} = T_f^{(l)}(T_z^{(l)})
+\]
+where \( \otimes \) is the discounting operator and \( \bigvee \) is the fusion operator.
+
+\subsection{Training-Time Trust Revision}
+
+During training, trust in parameters \( T_\theta \) is refined based on feedback from gradient signals. Algorithm~\ref{alg:trustupdate} describes the trust update process. For each batch:
+\begin{enumerate}
+    \item Compute trust over the batch labels.
+    \item Use backpropagation deltas \( \delta \) to count positive and negative evidence per parameter.
+    \item Derive subjective opinions from this evidence.
+    \item Combine prior trust with new evidence using revision and fusion operators.
+\end{enumerate}
+
+This mechanism ensures that parameter trust reflects both the training data’s assessed trustworthiness and the network’s learning dynamics.
+
+\begin{algorithm}[t]
+\caption{Trust Update Algorithm}\label{alg:trustupdate}
+\begin{algorithmic}[1]
+\Require \( \delta \): backpropagation error, trust in labels \( T_y \)
+\For{each layer \( l \)}
+    \For{each neuron \( i \), weight \( \theta_{i,j} \)}
+        \State Count positive/negative evidence from \( \delta \)
+        \State Convert to binomial opinion \( T_{\theta_{i,j} | y} \)
+        \State Apply conditional fusion with label trust
+        \State Revise prior trust: \( T_{\theta_{i,j}} \gets T_{\theta_{i,j}} \ominus T_{\theta_{i,j} \| y} \)
+        \State Apply additional update based on \( T_{lr} \), \( T_{x_i} \)
+    \EndFor
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Inference-Time Behavior and IPTA}
+
+At inference time, PTAS generates a trust score on the neural network’s output by propagating trust in the input. This process is dynamic and context-specific. The **Inference Path Trust Assessment (IPTA)** mechanism creates a substructure of PTAS corresponding only to the activated neurons during inference.
+
+The IPTA function maps:
+\[
+T_x \longrightarrow T_y
+\]
+where \( T_x \) is the trust in the input, and \( T_y \) is the final output trust, derived from the feedforward trust path followed by aggregation. This enables real-time trust assessments that reflect the specific path taken through the model for a given input.
+
+\subsubsection{Trust Aggregation}
+
+Figure~\ref{fig:trustaggregation} illustrates how PTAS aggregates trust values from its output layer. Each trust node provides an individual trust opinion \( T_{y_1}, \ldots, T_{y_k} \), which are combined via an aggregation function:
+\[
+T_y = \text{Agg} \left( (T_{y_j})_{j \in [1,k]} \right)
+\]
+An observer (virtual agent) receives both functional and referral trust and fuses them to produce the final trust score.
+
+\subsection{Theoretical Properties of PTAS}
+
+\subsubsection{Convergence}
+
+Under stable trust inputs and converging gradients, PTAS converges. Each trust value evolves according to a recursive update:
+\[
+T_{\theta}^{(n+1)} = T_{\theta}^{(n)} \ominus T_{\theta \| y}^{(n)}
+\]
+Using binomial multiplication as the update operator, this forms a geometric sequence in Subjective Logic, which converges under mild conditions (see Theorem~\ref{thm:ptasconverge}).
+
+\subsubsection{Symmetry and Invariance}
+
+PTAS preserves key logical properties:
+
+\paragraph{Vacuous Inputs Yield Vacuous Outputs}  
+If the input trust is vacuous, i.e., \( T_x = (0, 0, 1, a) \), then all outputs remain vacuous through feedforward.
+
+\paragraph{Symmetric Trust Inputs Yield Symmetric Outputs}  
+Given a binomial opinion \( x = (b, d, u) \), the trust output satisfies:
+\[
+T(x) = (b', d', u') \Rightarrow T(x^\ast) = (d', b', u')
+\]
+This ensures intuitive behavior under flipped trust opinions (e.g., full belief vs. full disbelief).
+
