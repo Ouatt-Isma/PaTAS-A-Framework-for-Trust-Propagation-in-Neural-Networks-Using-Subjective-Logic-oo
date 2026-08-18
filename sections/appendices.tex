@@ -743,6 +743,47 @@ expressing that a feature with a tight training distribution is a reliable witne
 The columns of \cref{tab:diagnostics} are, in this notation: the median of $\sigma^{\mathrm{eff}}_j$, the maximum of $w_j$, the share of total weight mass held by the top decile of features ranked by $w_j$, and the fraction of features with $w_j \geq 4$. The last two are descriptive statistics of weight concentration used for reporting only (the threshold $w_j \geq 4$ corresponds to $\sigma^{\mathrm{eff}}_j$ at most half of $\sigma_{\mathrm{ref}}$); they are not parameters of the construction.
 
 \vspace{-0.5em}
+\section{Operator and Threshold Sensitivity}\label{app:ablations}
+Both ablations use the MNIST 784-128-10 trust/trust scenario of \cref{exp:2} (20 epochs, 1000-sample evaluation subset, test-time feature noise $p = 0.3$ for the noisy columns).
+
+\Cref{tab:abl-fusion} varies the trust-revision fusion operator. The converged trust mass and every downstream metric agree to within $0.002$ across averaging, cumulative, and weighted fusion, so the findings of this paper do not depend on the variant; averaging is used throughout because Theorem~\ref{thm:arithm} establishes non-degenerate long-run behavior under repeated revision, whereas cumulative fusion accumulates evidence monotonically toward dogmatic (zero-uncertainty) opinions.
+
+\Cref{tab:abl-eps} sweeps the gradient-evidence threshold over three orders of magnitude. The trusted-input trust mass and the selective-prediction metrics are constant on the plateau $\epsilon \in [0.05, 1]$ and degrade only at degenerate-small values, where nearly every gradient is read as strong evidence; the equality of the trusted-input trust and distrusted-input distrust columns is the belief/disbelief symmetry of Theorem~\ref{thm:infvac} observed empirically.
+
+\begin{table}[H]
+\centering\footnotesize
+\begin{tabular}{lccccc}
+\toprule
+Fusion & Trust $t_{\mathrm{tr}}$ & AUROC$_{\mathrm{cl}}$ & AUROC$_{\mathrm{no}}$ & ECE$_{\mathrm{cl}}$ & ECE$_{\mathrm{no}}$ \\
+\midrule
+Average (used) & 0.988 & 0.957 & 0.973 & 0.013 & 0.020 \\
+Cumulative & 0.990 & 0.957 & 0.973 & 0.012 & 0.020 \\
+Weighted & 0.989 & 0.957 & 0.973 & 0.013 & 0.020 \\
+\bottomrule
+\end{tabular}
+\caption{Trust-revision fusion ablation: converged trusted-input trust mass and selective-prediction metrics on clean (cl) and feature-noised (no) test data.}
+\label{tab:abl-fusion}
+\end{table}
+
+\begin{table}[H]
+\centering\footnotesize
+\begin{tabular}{lccccc}
+\toprule
+$\epsilon$ & $t_{\mathrm{tr}}$ & $d_{\mathrm{dis}}$ & AUROC$_{\mathrm{cl}}$ & AUROC$_{\mathrm{no}}$ & ECE$_{\mathrm{cl}}$ \\
+\midrule
+0.001 & 0.573 & 0.573 & 0.826 & 0.900 & 0.195 \\
+0.01 & 0.976 & 0.976 & 0.940 & 0.964 & 0.018 \\
+0.05$^{*}$ & 0.989 & 0.989 & 0.957 & 0.973 & 0.013 \\
+0.1 & 0.989 & 0.989 & 0.957 & 0.973 & 0.013 \\
+0.2 & 0.989 & 0.989 & 0.957 & 0.973 & 0.013 \\
+0.5 & 0.989 & 0.989 & 0.957 & 0.973 & 0.013 \\
+1.0 & 0.989 & 0.989 & 0.957 & 0.973 & 0.013 \\
+\bottomrule
+\end{tabular}
+\caption{$\epsilon$ sweep ($^{*}$ = value used in Experiments 2--4): trusted-input trust $t_{\mathrm{tr}}$, distrusted-input distrust $d_{\mathrm{dis}}$ (equal by Theorem~\ref{thm:infvac}), and selective-prediction metrics. All quantities are constant on $\epsilon \in [0.05, 1]$.}
+\label{tab:abl-eps}
+\end{table}
+
 \section{Detailed results}\label{app:expres}
 
 \begin{figure}[H]
