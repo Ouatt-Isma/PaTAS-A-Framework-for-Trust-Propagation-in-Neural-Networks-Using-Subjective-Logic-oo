@@ -64,7 +64,7 @@ $\begin{aligned}
 P &= b+au 
 \end{aligned}$ \\ \hline
 
-$\oplus$ & Averaging fusion &
+$\oplus$ & Fusion (averaging variant used throughout this work) &
 \cite{8009820}\\ \hline
 
 $\circleddash$ & Fusion-based revision &
@@ -262,46 +262,36 @@ $\mathrm{Pf}_\Theta$ & Parallel Trust Function (PaTAS trust feedforward) \\
 
 \section{Theorems and Proofs (\cref{sec:ptastheory})}\label{app:proof}
 \subsection{Key theorems}
-\begin{theorem}[Convergence of Subjective Logic Arithmetic Sequence]\label{thm:arithm}
-Let $(\Omega, \ominus)$ be a group. \(\Omega\) is a set of opinions specified as \([0,1]^4\)
-Let $\omega_n = (b_n, d_n, u_n, a_n) \in \Omega$ be a sequence defined recursively by the operator $\ominus$ as follows:
+\begin{theorem}[Convergence of Averaging-Fusion Revision]\label{thm:arithm}
+Let $\Omega = \{(b,d,u,a) \in [0,1]^4 : b+d+u = 1\}$ with the base rate $a$ held fixed, let $q = (b_q, d_q, u_q, a) \in \Omega$, and let the sequence $(\omega_n)$ be defined by the averaging-fusion revision used in our implementation,
 \[
-\omega_{n+1} = \omega_n \ominus q,
+b_{n+1} = \frac{b_n u_q + b_q u_n}{u_n + u_q}, \qquad
+d_{n+1} = \frac{d_n u_q + d_q u_n}{u_n + u_q}, \qquad
+u_{n+1} = \frac{2\, u_n u_q}{u_n + u_q}.
 \]
-where \(q\in \Omega\) and the operator $\ominus$ is a fusion operator.
-
-Then the sequence $(\omega_n)$ converges in $[0,1]^4$ to a limit:
+If $u_0 > 0$, then $\omega_n \to q$, and the convergence is geometric: with $m = \min(u_0, u_q)$,
 \[
-\begin{cases}
-\omega_0, & \text{if } q = (0, 0, 1, a_0), \\
-q & \text{otherwise}.
-\end{cases}
+|b_{n+1} - b_q| = \lambda_n\, |b_n - b_q|, \qquad
+\lambda_n = \frac{u_q}{u_n + u_q} \;\leq\; \frac{u_q}{m + u_q} < 1,
 \]
-
+and likewise for $d_n$; the uncertainty $u_n$ converges to $u_q$ monotonically, and $\lambda_n \to 1/2$. Two boundary cases complete the picture: if $u_q = 0$ and $u_0 > 0$, the sequence reaches $q$ in one step; if $u_0 = 0$, the sequence is constant, since dogmatic opinions are fixed points of averaging fusion. PaTAS avoids the latter case by initializing all parameter opinions as vacuous ($u_0 = 1$).
 \end{theorem}
 
 \begin{proof}
-Let us define a distance \( d \) on the space \( \Omega \subseteq [0,1]^4 \), based on the Euclidean norm (2-norm). 
+If $u_q = 0$ and $u_n > 0$, the update gives $b_{n+1} = b_q$, $d_{n+1} = d_q$, $u_{n+1} = 0$, so $\omega_1 = q$. If $u_0 = 0$, the update gives $b_{n+1} = b_n$, $d_{n+1} = d_n$, $u_{n+1} = 0$ for all $n$. Assume now $u_0 > 0$ and $u_q > 0$.
 
-Assume that the recursive update is expressed as:
+\emph{Uncertainty.} $u_{n+1}$ is the harmonic mean of $u_n$ and $u_q$, which lies strictly between $\min(u_n, u_q)$ and $\max(u_n, u_q)$ whenever $u_n \neq u_q$: indeed $u_{n+1} > u_q \iff 2 u_n > u_n + u_q \iff u_n > u_q$, and symmetrically for $u_n < u_q$. Hence $(u_n)$ is monotone toward $u_q$, bounded, and bounded below by $m = \min(u_0, u_q) > 0$. It converges to a limit $L \geq m$ satisfying $L = 2 L u_q/(L + u_q)$, i.e., $L (L - u_q) = 0$, hence $L = u_q$.
+
+\emph{Belief and disbelief.} Subtracting $b_q$ from the belief update,
 \[
-\omega_{n+1} = \omega_n \ominus q, q \in \Omega
+b_{n+1} - b_q
+= \frac{b_n u_q + b_q u_n - b_q (u_n + u_q)}{u_n + u_q}
+= \frac{u_q}{u_n + u_q}\, (b_n - b_q),
 \]
-where \(\ominus\) denotes a fusion operator (e.g., cumulative or averaging fusion) that combines opinions \(\omega_n\) and \(q\). By the properties of subjective logic fusion, the result of this operation satisfies one of the following:
-
-\begin{enumerate}
-    \item \(d(\omega_{n+1}, q) < d(\omega_n, q)\), i.e., the new opinion is strictly closer to \(q\), or \label{case:strict}
-    \item \(d(\omega_{n+1}, q) = d(\omega_n, q)\) and \(\omega_{n+1} = \omega_n\), meaning the sequence has reached a fixed point. \label{case:fixed}
-\end{enumerate}
-
-This behavior reflects the nature of fusion operators, which are designed to generate an opinion that represents a consistent aggregation of the two inputs.
-
-In case~\ref{case:strict}, the distance to \(q\) strictly decreases at each step. Since the 2-norm is bounded in \([0,1]^4\), the sequence \((\omega_n)\) is contained in a compact space and forms a Cauchy sequence. Therefore, it converges to the unique fixed point \(q\).
-
-In case~\ref{case:fixed}, where \(\omega_{n+1} = \omega_n\), the sequence remains constant and equal to \(\omega_0\). This occurs, for instance, when \(q= (0, 0, 1, a_0)\), representing full uncertainty. In that case, most of the fusion operators (almost all except averaging fusion) has no effect, and the sequence stays fixed.
-
-Thus, in both cases, the sequence \((\omega_n)\) converges.
+so the error contracts at every step by $\lambda_n = u_q/(u_n+u_q) \leq u_q/(m+u_q) < 1$, giving $|b_n - b_q| \leq \big(\tfrac{u_q}{m+u_q}\big)^n |b_0 - b_q| \to 0$. The same identity holds for $d_n$, the base rate is unchanged by fusion, and $u_n \to u_q$ was shown above. Hence $\omega_n \to q$, and since $u_n \to u_q$ the per-step rate satisfies $\lambda_n \to 1/2$.
 \end{proof}
+
+Averaging fusion is therefore affected by a vacuous revision opinion: for $q = (0,0,1,a)$ the theorem yields $\omega_n \to q$, i.e., repeated revision with fully uncertain evidence progressively erodes committed mass, in contrast to cumulative fusion, for which the vacuous opinion is a neutral element. No group structure on $(\Omega, \oplus)$ is required or assumed.
 
 
 \begin{theorem}[Convergence of Subjective Logic Geometric Sequence]\label{thm:geo}
@@ -323,7 +313,7 @@ Then the sequence $(\omega_n)$ converges in $[0,1]^4$ if $a_q < 1$. In particula
 \begin{itemize}
     \item $a_n = a_0 a_q^n \to 0$ as $n \to \infty$,
     \item $d_n \to 1$ if $d_q > 0$, and $d_n = d_0$ if $d_q = 0$,
-    \item $b_n \to 0 $ if $p_q = b_q + a_q u_q < 1$, and $b_n = b_0 $ if $p_q = 1$.
+    \item $b_n \to 0$ if $p_q = b_q + a_q u_q < 1$; if $p_q = 1$, $(b_n)$ converges to a limit within $a_0/(1-a_q)$ of $b_0$.
 \end{itemize}
 \end{theorem}
 
@@ -347,23 +337,21 @@ This is a first-order linear recurrence. If $d_q > 0$, the sequence is increasin
 \]
 If $d_q = 0$, then $d_{n+1} = d_n = d_0$ for all $n$.
 
-\emph{3. Behavior of $b_n$:}  
-The update equation for $b_{n+1}$ is rational function involving $a_n$, $b_n$, and $u_n$. As $a_n \to 0$, the update expressions simplify:
-% \[
-% b_{n+1} \approx b_n b_q + \dfrac{(1 - a_n) a_q b_n u_q + a_n (1 - a_q) u_n b_q}{1 - a_n a_q},
-% \]
+\emph{3. Convergence of $b_n$:}
+Separating the terms proportional to $a_n$ in the exact update gives
 \[
-b_{n+1} \approx b_n b_q + a_q b_n u_q = b_n (b_q + a_q u_q ) = b_n p_q
+b_{n+1} = p_q\, b_n + \delta_n, \qquad
+\delta_n = \frac{a_n (1 - a_q)}{1 - a_n a_q}\,\big(u_n b_q - a_q b_n u_q\big),
+\qquad p_q = b_q + a_q u_q,
 \]
-this converges since the projected probability \(p_q \in [0,1] \)
- 
-To conclude with \(u_n\), since we have \(u_n = 1 - (b_n + d_n)\) it will also converge
+and since $1 - a_n a_q \geq 1 - a_q$ and $|u_n b_q - a_q b_n u_q| \leq 1$, the remainder is bounded by $|\delta_n| \leq a_n = a_0 a_q^n$, which is summable. If $p_q < 1$, unrolling the recursion yields $0 \leq b_n \leq p_q^n b_0 + \sum_{k<n} p_q^{\,n-1-k} a_0 a_q^k \to 0$, a sum of two vanishing geometric terms, so $b_n \to 0$. If $p_q = 1$, then $b_{n+1} = b_n + \delta_n$ with $\sum_k |\delta_k| \leq a_0/(1-a_q) < \infty$, so $(b_n)$ is Cauchy and converges, with limit within $a_0/(1-a_q)$ of $b_0$.
 
+Finally, $u_n = 1 - (b_n + d_n)$ converges as the difference of convergent sequences.
 \end{proof}
 
 \subsection{Proof for Theorem~\ref{thm:convergence}}
 \begin{proof}
-Assume that the neural network training process converges, implying that weight updates become increasingly small, and the back propagation gradients \( g \) stabilize. This stability in \( g \) reflects the fact that the model has reached a minimum or stable loss value.
+The proof operates under the idealization stated in the theorem: the network has been trained to convergence and the batch gradients \( g \) have stabilized, so that the revision opinion applied to each parameter is fixed across iterations. Mini-batch SGD does not provide exact gradient stabilization; the empirical counterpart of this idealization, bounded oscillation of the trust trajectories after accuracy convergence, is documented in Appendix~\ref{app:expres}.
 
 Moreover, the stability of \( T_x \), and \( T_y \)implies that trust inputs to the update mechanism are stable. Consequently, each new trust update for \( T_{\theta} \) is computed using consistent and bounded evidence, which over time results in the stabilization of the subjective opinions assigned to \( T_{\theta} \).
 

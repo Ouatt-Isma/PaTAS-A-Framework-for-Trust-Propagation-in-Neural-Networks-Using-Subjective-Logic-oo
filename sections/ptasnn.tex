@@ -74,9 +74,9 @@ where $\theta^{(l)}_{i,j}$ denotes the weight connecting neuron $j$ in layer $(l
 
 For each incoming edge \(j\), the parameter trust is then revised with the deduced neuron trust, \(T_{\theta_{i,j}^{(l)}} \leftarrow T_{\theta_{i,j}^{(l)}} \circleddash T_{n_{i}^{(l)} \parallel Y_\text{batch}}\), and adjusted for the auxiliary factors that also drive the gradient update in \cref{eq:gd1,eq:gd2}, namely the learning rate, the input feature, and the batch labels:
 \begin{equation}
-    T_{\theta_{i,j}^{(l)}} \longleftarrow T_{\theta_{i,j}^{(l)}} \odot (T_{x_j^{(l)}} \oslash T_{y_\text{batch}}),
+    T_{\theta_{i,j}^{(l)}} \longleftarrow T_{\theta_{i,j}^{(l)}} \odot (T_{x_j^{(l-1)}} \oslash T_{y_\text{batch}}),
 \end{equation}
-where $\odot$ is binomial multiplication and $\oslash$ is the conservative combination \((b,d,u)\) with \(b = \min(b_1,b_2)\), \(d = \max(d_1,d_2)\), \(u = 1-(b+d)\). This reflects that both unreliable features and mislabeled data can strongly bias parameter updates: trust cannot exceed the weakest evidence and distrust must reflect the strongest warning.
+where $\odot$ is binomial multiplication and $\oslash$ is the conservative combination \((b,d,u)\) with \(b = \min(b_1,b_2)\), \(d = \max(d_1,d_2)\), \(u = 1-(b+d)\). This reflects that both unreliable features and mislabeled data can strongly bias parameter updates: trust cannot exceed the weakest evidence and distrust must reflect the strongest warning. Bias terms receive the same treatment: each bias is handled as one additional parameter row whose input carries a vacuous opinion during propagation and whose trust opinion is revised exactly like any weight.
 
 This process refines the trust in each parameter by incorporating both gradient-based behavioral evidence and auxiliary trust factors, allowing the PaTAS to align parameter trust with the training dynamics of the neural network. 
 
@@ -92,7 +92,7 @@ We first establish fundamental properties describing the stability and consisten
 % \todo[inline]{Discuss convergence of PaTAS in case of convergence of input}
 \label{sec:ptas_convergence}
 
-During training, PaTAS revises the trust opinions on network parameters from trust opinions on the inputs, labels, hyperparameters, and gradient information, as outlined in \cref{alg:trustupdate}. Theorem~\ref{thm:convergence} establishes that this recursive update converges under stable conditions, a property that relies on characteristics of the operators used to feedforward and revise the trust in the parameters \(\theta\).
+During training, PaTAS revises the trust opinions on network parameters from trust opinions on the inputs, labels, hyperparameters, and gradient information, as outlined in \cref{alg:trustupdate}. Theorem~\ref{thm:convergence} establishes that this recursive update converges under an explicitly stated idealization of stable training; the training-time behavior under mini-batch noise is assessed empirically.
 
 % Before delving into the specifics of PaTAS convergence, we first present a key theorem that will serve as a foundational tool in establishing the convergence properties of PaTAS.
 
@@ -100,9 +100,10 @@ During training, PaTAS revises the trust opinions on network parameters from tru
 \begin{theorem}[Convergence of PaTAS Creation]\label{thm:convergence}
 \footnote{All proofs of the theorems in this section, as well as additional theoretical results, are provided in Appendix~\ref{app:proof}.}
 
-Let a neural network be trained until convergence, and let its associated PaTAS operate with a stable input trust assessment $T_x$, a stable label trust assessment $T_y$, and a stable hyperparameter $\epsilon$.
-Let $T_\theta^{(n)}$ denote the trust opinion at iteration $n$ for parameter $\theta$. If the revision of the trust in the weights is performed as specified in \cref{alg:trustupdate}, then the PaTAS parameter will converge.
+Assume (i) the parameter opinions are initialized non-dogmatically (PaTAS initializes them as vacuous), and (ii) the per-batch revision opinion applied to each parameter stabilizes to a fixed opinion $q$: an idealization of a network trained to convergence with stationary gradient statistics and stable $T_x$, $T_y$, and $\epsilon$.
+Let $T_\theta^{(n)}$ denote the trust opinion at iteration $n$ for parameter $\theta$. If the revision is performed as specified in \cref{alg:trustupdate}, then $T_\theta^{(n)}$ converges; for averaging-fusion revision the limit is $q$, at the geometric rate of Theorem~\ref{thm:arithm}.
 \end{theorem}
+Under actual mini-batch training the revision opinion fluctuates from batch to batch, so the theorem guarantees the consistency of the revision dynamics rather than convergence of the stochastic process itself; empirically, after accuracy convergence the trust trajectories oscillate within a narrow band around a stable level (Appendix~\ref{app:expres}).
 \subsubsection{Symmetry and Invariance Properties of PaTAS}\label{sec:ptassyminv}
 
 \begin{theorem}[Consistency Properties of PaTAS]\label{thm:infvac}

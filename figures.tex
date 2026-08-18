@@ -185,5 +185,5 @@
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.62\textwidth]{plots_v2/exp4/model_trust_vs_labelnoise.pdf}
-  \caption{Training-quality audit (\cref{tab:audit}): PaTAS model-side trust, mean softmax confidence, and test accuracy as functions of the train-time label-flip rate $p$. The depth-normalized curve rescales the committed mass $b+d$ of the aggregated opinion to $(b+d)^{1/L}$, with $L$ the number of trust-propagation layers, making trust comparable across network depths. Trust drops as a tripwire at any non-zero rate without using test data; confidence tracks severity but requires a clean labelled test set.}
+  \caption{Training-quality audit (\cref{tab:audit}): PaTAS model-side trust, mean softmax confidence, and test accuracy as functions of the train-time label-flip rate $p$. The depth-normalized curve rescales the committed mass $b+d$ of the aggregated opinion to $(b+d)^{1/L}$, with $L$ the number of trust-propagation layers, making trust comparable across network depths. Trust drops as a tripwire at any non-zero rate without using test data; confidence tracks severity but requires clean held-out data.}
 \end{figure}
