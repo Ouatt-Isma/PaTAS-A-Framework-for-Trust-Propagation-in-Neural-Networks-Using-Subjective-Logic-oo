@@ -784,6 +784,22 @@ $\epsilon$ & $t_{\mathrm{tr}}$ & $d_{\mathrm{dis}}$ & AUROC$_{\mathrm{cl}}$ & AU
 \label{tab:abl-eps}
 \end{table}
 
+\begin{table}[H]
+\centering\footnotesize
+\begin{tabular}{lccc}
+\toprule
+Hidden width & $\epsilon=0.02$ & $\epsilon=0.05$ & $\epsilon=0.1$ \\
+\midrule
+16 & 0.253 & 0.306 & 0.316 \\
+32 & 0.296 & 0.325 & 0.328 \\
+64 & 0.317 & 0.333 & 0.334 \\
+128 & 0.325 & 0.337 & 0.337 \\
+\bottomrule
+\end{tabular}
+\caption{Width control for \cref{exp:2} (vacuous assessments): converged trust mass across architectures at three gradient-evidence thresholds. The width ordering is identical at every $\epsilon$, ruling out the fixed-threshold confound; the magnitudes are $\epsilon$-dependent, consistent with \cref{tab:abl-eps}.}
+\label{tab:abl-width}
+\end{table}
+
 \section{Detailed results}\label{app:expres}
 
 \begin{figure}[H]

@@ -31,7 +31,9 @@ Output-Trust Aggregation combines the per-neuron output opinions into a single t
 
 GenIPTA dynamically constructs, for a single inference, an Inference-Path Trust Assessment (IPTA) reflecting the trustworthiness of the exact computational path taken: the activation trace recorded during that inference instantiates a temporary subnetwork containing only the Trust Nodes of the activated neurons. 
 
-Since all neurons are typically activated to some degree while only a subset is strongly relevant, GenIPTA can also operate on truncated activation sets or weight the assessment by the activation values, so that stronger activations contribute more heavily. The functional flow of PaTAS across feedforward, backpropagation, and inference is illustrated in Appendix~\ref{app:flow}.
+Since all neurons are typically activated to some degree while only a subset is strongly relevant, GenIPTA can also operate on truncated activation sets or weight the assessment by the activation values, so that stronger activations contribute more heavily.
+
+\paragraph*{Convolutional networks} Under weight sharing an activation path cannot select weights, only \emph{applications} of a filter, so binary neuron pruning generalizes to a participation degree: each channel's contribution to the next layer's fusion is weighted by the fraction of spatial positions where its post-ReLU output was positive, and the bias and input rows keep weight one. For binary participation this weighted propagation coincides exactly with the row-pruned propagation of the fully connected case, so conv IPTA is a strict generalization rather than a new mechanism; average pooling is fusion over the window and a residual connection fuses the block input with the block output. \Cref{exp:4} evaluates this per-sample conv IPTA on three convolutional networks. The functional flow of PaTAS across feedforward, backpropagation, and inference is illustrated in Appendix~\ref{app:flow}.
 
 \vspace{-0.5em}
 \subsection{Parameter-Trust Update}\label{sec:ptasfunc}
