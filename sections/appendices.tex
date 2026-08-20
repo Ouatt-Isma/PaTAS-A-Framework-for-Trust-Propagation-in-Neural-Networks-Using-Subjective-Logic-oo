@@ -86,6 +86,8 @@ $\circledcirc $ & Deduction &
 
 \end{tabular}
 \end{table}
+
+The conservative combination $\oslash$ ($b = \min(b_1, b_2)$, $d = \max(d_1, d_2)$, $u = 1 - b - d$) is not a standard SL operator; its algebraic behavior is elementary: it is commutative, associative, and idempotent (componentwise $\min$ and $\max$ are), and monotone in both arguments (increasing either belief cannot decrease the combined belief, increasing either disbelief cannot decrease the combined disbelief). It is used only to combine the feature and label opinions into the most conservative joint reading before revision.
 \begin{table}[H]
 \centering
 \caption{Symbols Used in the Parameter-Trust Update Subsection and Algorithm}
@@ -317,6 +319,8 @@ Then the sequence $(\omega_n)$ converges in $[0,1]^4$ if $a_q < 1$. In particula
 \end{itemize}
 \end{theorem}
 
+Theorem~\ref{thm:geo} analyzes the operator with Jøsang's base-rate dynamics $a_{x \odot y} = a_x a_y$. The implementation instead holds every base rate fixed at $0.5$ through all operators (the convention stated with the experiments), which only strengthens the conclusion: with $a_n = a$ constant, the remainder bound in the proof holds with $a_n$ replaced by the constant, and the same limits follow.
+
 \begin{proof}
 We analyze each component of $\omega_n$ separately.
 
@@ -370,6 +374,8 @@ In detail:
 
 Therefore, assuming convergence of $T_x$, $T_y$, and $g$, the trust values for all PaTAS parameters stabilize as training progresses, proving convergence of PaTAS creation. 
 \end{proof}
+
+\emph{Scope.} The convergence statement covers the revision dynamics: Theorem~\ref{thm:arithm} applies to the $\circleddash$ step with a stabilized revision opinion. Each batch additionally applies the multiplicative adjustment of \cref{eq:layerprop}-style operators (Eq.~(8)); the fixed point and contraction of the composed revise-then-multiply map are not established here and are left open. Empirically the composed iteration is stable (Appendix~\ref{app:expres}); a fixed-point analysis of the composed map is future theoretical work.
 
 
 
@@ -683,7 +689,7 @@ Thus, we adjust the trust in the network output based on the trust in both the p
     \Function{Revise}{$T_{\theta_{i,j}^{(l)}}, T_{n_i \parallel Y_\text{batch}}$}
         \State \Return $T_{\theta_{i,j}^{(l)}} \circleddash T_{n_i \parallel Y_\text{batch}}$
     \EndFunction
-    \Function{Update}{$T_{\theta^{(l)}_{i,j}}, T_{lr}, 
+    \Function{Update}{$T_{\theta^{(l)}_{i,j}},
     T_{x^{(l-1)}_j}, T_{y_\text{batch}}$}
     \State \Return $T_{\theta^{(l)}_{i,j}} \odot 
            (T_{x^{(l-1)}_j} \oslash T_{y_\text{batch}})$
@@ -721,6 +727,8 @@ x' \sim U(\min(\text{features}), \max(\text{features})),
 \]
 
 Label degradation is modeled analogously: uncertainty is introduced via random label noise, while full distrust is represented by a complete replacement of the labels.
+
+For labels, ``complete replacement'' draws a different class uniformly; with two classes this is deterministic flipping, which is why fully distrusted labels yield near-zero rather than chance-level test accuracy in \cref{tab:cancer_results}.
 
 \section{Conformity-Based Input-Trust Construction (\cref{exp:4})}\label{app:conformity}
 This appendix specifies the input-trust construction used in \cref{exp:4} precisely; all parameters are fixed once and shared by every dataset.
